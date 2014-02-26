@@ -7,6 +7,7 @@ import (
 	"io"
 	"reflect"
 	"runtime"
+	"runtime/debug"
 	"strings"
 )
 
@@ -67,6 +68,11 @@ func (d *Decoder) Decode(v interface{}) (err error) {
 			default:
 				err = errors.New("Unknown panic: " + reflect.TypeOf(r).String())
 			}
+
+			stackTrace := debug.Stack()
+			fullErrorMessage := fmt.Sprintf("%s\n%s", err.Error(), string(stackTrace))
+			err = errors.New(fullErrorMessage)
+
 		}
 	}()
 
