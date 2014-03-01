@@ -10,7 +10,14 @@ import (
 	"time"
 )
 
-var timeTimeType = reflect.TypeOf(time.Time{})
+var (
+	timeTimeType  = reflect.TypeOf(time.Time{})
+	marshalerType = reflect.TypeOf(new(Marshaler)).Elem()
+)
+
+type Marshaler interface {
+	MarshalYAML() (tag string, value interface{})
+}
 
 // An Encoder writes JSON objects to an output stream.
 type Encoder struct {
@@ -41,7 +48,7 @@ func (e *Encoder) Encode(v interface{}) (err error) {
 		return e.err
 	}
 
-	e.marshal("", reflect.ValueOf(v))
+	e.marshal("", reflect.ValueOf(v), true)
 
 	yaml_document_end_event_initialize(&e.event, true)
 	e.emit()
@@ -58,13 +65,26 @@ func (e *Encoder) emit() {
 	}
 }
 
-func (e *Encoder) marshal(tag string, v reflect.Value) {
+func (e *Encoder) marshal(tag string, v reflect.Value, allowAddr bool) {
+	vt := v.Type()
+	if vt.Implements(marshalerType) {
+		e.emitMarshaler(tag, v)
+		return
+	}
+
+	if v.Kind() != reflect.Ptr && allowAddr {
+		if reflect.PtrTo(vt).Implements(marshalerType) && v.CanAddr() {
+			e.emitMarshaler(tag, v.Addr())
+			return
+		}
+	}
+
 	switch v.Kind() {
 	case reflect.Interface:
 		if v.IsNil() {
 			e.emitNil()
 		} else {
-			e.marshal(tag, v.Elem())
+			e.marshal(tag, v.Elem(), allowAddr)
 		}
 	case reflect.Map:
 		e.emitMap(tag, v)
@@ -72,7 +92,7 @@ func (e *Encoder) marshal(tag string, v reflect.Value) {
 		if v.IsNil() {
 			e.emitNil()
 		} else {
-			e.marshal(tag, v.Elem())
+			e.marshal(tag, v.Elem(), true)
 		}
 	case reflect.Struct:
 		e.emitStruct(tag, v)
@@ -98,8 +118,8 @@ func (e *Encoder) emitMap(tag string, v reflect.Value) {
 		var keys stringValues = v.MapKeys()
 		sort.Sort(keys)
 		for _, k := range keys {
-			e.marshal("", k)
-			e.marshal("", v.MapIndex(k))
+			e.marshal("", k, true)
+			e.marshal("", v.MapIndex(k), true)
 		}
 	})
 }
@@ -119,17 +139,17 @@ func (e *Encoder) emitStruct(tag string, v reflect.Value) {
 				continue
 			}
 
-			e.marshal("", reflect.ValueOf(f.name))
+			e.marshal("", reflect.ValueOf(f.name), true)
 			e.flow = f.flow
-			e.marshal("", fv)
+			e.marshal("", fv, true)
 		}
 	})
 }
 
 func (e *Encoder) emitTime(tag string, v reflect.Value) {
 	t := v.Interface().(time.Time)
-	s := t.Format(time.RFC3339)
-	e.emitScalar(s, "", tag, yaml_PLAIN_SCALAR_STYLE)
+	bytes, _ := t.MarshalText()
+	e.emitScalar(string(bytes), "", tag, yaml_PLAIN_SCALAR_STYLE)
 }
 
 func isEmptyValue(v reflect.Value) bool {
@@ -183,7 +203,7 @@ func (e *Encoder) emitSlice(tag string, v reflect.Value) {
 
 	n := v.Len()
 	for i := 0; i < n; i++ {
-		e.marshal("", v.Index(i))
+		e.marshal("", v.Index(i), true)
 	}
 
 	yaml_sequence_end_event_initialize(&e.event)
@@ -254,7 +274,18 @@ func (e *Encoder) emitScalar(value, anchor, tag string, style yaml_scalar_style_
 	if !implicit {
 		style = yaml_PLAIN_SCALAR_STYLE
 	}
-
 	yaml_scalar_event_initialize(&e.event, []byte(anchor), []byte(tag), []byte(value), implicit, implicit, style)
 	e.emit()
+}
+
+func (e *Encoder) emitMarshaler(tag string, v reflect.Value) {
+	if v.Kind() == reflect.Ptr && v.IsNil() {
+		e.emitNil()
+		return
+	}
+
+	m := v.Interface().(Marshaler)
+	t, val := m.MarshalYAML()
+
+	e.marshal(t, reflect.ValueOf(val), false)
 }
