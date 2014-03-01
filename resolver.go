@@ -46,12 +46,12 @@ func init() {
 	ymd_regexp = regexp.MustCompile("^([0-9][0-9][0-9][0-9])-([0-9][0-9]?)-([0-9][0-9]?)$")
 }
 
-func resolve(event yaml_event_t, v reflect.Value) error {
+func resolve(event yaml_event_t, v reflect.Value) (string, error) {
 	val := string(event.value)
 
 	if null_values[val] {
 		v.Set(reflect.Zero(v.Type()))
-		return nil
+		return "!!null", nil
 	}
 
 	switch v.Kind() {
@@ -71,33 +71,33 @@ func resolve(event yaml_event_t, v reflect.Value) error {
 		return resolve_time(val, v)
 	case reflect.Slice:
 		if v.Type() != byteSliceType {
-			return errors.New("Cannot resolve into " + v.Type().String())
+			return "", errors.New("Cannot resolve into " + v.Type().String())
 		}
 		b := make([]byte, base64.StdEncoding.DecodedLen(len(event.value)))
 		n, err := base64.StdEncoding.Decode(b, event.value)
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		v.Set(reflect.ValueOf(b[0:n]))
 	default:
-		return errors.New("Resolve failed for " + v.Kind().String())
+		return "", errors.New("Resolve failed for " + v.Kind().String())
 	}
 
-	return nil
+	return "!!str", nil
 }
 
-func resolve_bool(val string, v reflect.Value) error {
+func resolve_bool(val string, v reflect.Value) (string, error) {
 	b, found := bool_values[strings.ToLower(val)]
 	if !found {
-		return errors.New("Invalid boolean: " + val)
+		return "", errors.New("Invalid boolean: " + val)
 	}
 
 	v.SetBool(b)
-	return nil
+	return "!!bool", nil
 }
 
-func resolve_int(val string, v reflect.Value) error {
+func resolve_int(val string, v reflect.Value) (string, error) {
 	val = strings.Replace(val, "_", "", -1)
 	var value int64
 
@@ -112,7 +112,7 @@ func resolve_int(val string, v reflect.Value) error {
 	base := 10
 	if val == "0" {
 		v.Set(reflect.Zero(v.Type()))
-		return nil
+		return "!!int", nil
 	}
 
 	if strings.HasPrefix(val, "0b") {
@@ -131,7 +131,7 @@ func resolve_int(val string, v reflect.Value) error {
 			n, err := strconv.ParseInt(digits[j], 10, 64)
 			n *= bes
 			if err != nil || v.OverflowInt(n) {
-				return errors.New("Integer: " + val)
+				return "", errors.New("Integer: " + val)
 			}
 			value += n
 			bes *= 60
@@ -139,25 +139,25 @@ func resolve_int(val string, v reflect.Value) error {
 
 		value *= sign
 		v.SetInt(value)
-		return nil
+		return "!!int", nil
 	}
 
 	value, err := strconv.ParseInt(val, base, 64)
 	value *= sign
 	if err != nil || v.OverflowInt(value) {
-		return errors.New("Integer: " + val)
+		return "", errors.New("Integer: " + val)
 	}
 
 	v.SetInt(value)
-	return nil
+	return "!!int", nil
 }
 
-func resolve_uint(val string, v reflect.Value) error {
+func resolve_uint(val string, v reflect.Value) (string, error) {
 	val = strings.Replace(val, "_", "", -1)
 	var value uint64
 
 	if val[0] == '-' {
-		return errors.New("Unsigned int with negative value: " + val)
+		return "", errors.New("Unsigned int with negative value: " + val)
 	}
 
 	if val[0] == '+' {
@@ -167,7 +167,7 @@ func resolve_uint(val string, v reflect.Value) error {
 	base := 10
 	if val == "0" {
 		v.Set(reflect.Zero(v.Type()))
-		return nil
+		return "!!int", nil
 	}
 
 	if strings.HasPrefix(val, "0b") {
@@ -186,26 +186,26 @@ func resolve_uint(val string, v reflect.Value) error {
 			n, err := strconv.ParseUint(digits[j], 10, 64)
 			n *= bes
 			if err != nil || v.OverflowUint(n) {
-				return errors.New("Unsigned Integer: " + val)
+				return "", errors.New("Unsigned Integer: " + val)
 			}
 			value += n
 			bes *= 60
 		}
 
 		v.SetUint(value)
-		return nil
+		return "!!int", nil
 	}
 
 	value, err := strconv.ParseUint(val, base, 64)
 	if err != nil || v.OverflowUint(value) {
-		return errors.New("Unsigned Integer: " + val)
+		return "", errors.New("Unsigned Integer: " + val)
 	}
 
 	v.SetUint(value)
-	return nil
+	return "!!int", nil
 }
 
-func resolve_float(val string, v reflect.Value) error {
+func resolve_float(val string, v reflect.Value) (string, error) {
 	val = strings.Replace(val, "_", "", -1)
 	var value float64
 
@@ -229,7 +229,7 @@ func resolve_float(val string, v reflect.Value) error {
 			n, err := strconv.ParseFloat(digits[j], v.Type().Bits())
 			n *= bes
 			if err != nil || v.OverflowFloat(n) {
-				return errors.New("Float: " + val)
+				return "", errors.New("Float: " + val)
 			}
 			value += n
 			bes *= 60
@@ -240,15 +240,15 @@ func resolve_float(val string, v reflect.Value) error {
 		value, err = strconv.ParseFloat(val, v.Type().Bits())
 		value *= float64(sign)
 		if err != nil || v.OverflowFloat(value) {
-			return errors.New("Float: " + val)
+			return "", errors.New("Float: " + val)
 		}
 	}
 
 	v.SetFloat(value)
-	return nil
+	return "!!float", nil
 }
 
-func resolve_time(val string, v reflect.Value) error {
+func resolve_time(val string, v reflect.Value) (string, error) {
 	var parsedTime time.Time
 	matches := ymd_regexp.FindStringSubmatch(val)
 	if len(matches) > 0 {
@@ -259,7 +259,7 @@ func resolve_time(val string, v reflect.Value) error {
 	} else {
 		matches = timestamp_regexp.FindStringSubmatch(val)
 		if len(matches) == 0 {
-			return errors.New("Unexpected timestamp: " + val)
+			return "", errors.New("Unexpected timestamp: " + val)
 		}
 
 		year, _ := strconv.Atoi(matches[1])
@@ -295,7 +295,7 @@ func resolve_time(val string, v reflect.Value) error {
 	}
 
 	v.Set(reflect.ValueOf(parsedTime))
-	return nil
+	return "", nil
 }
 
 func resolveInterface(event yaml_event_t) interface{} {
@@ -316,17 +316,17 @@ func resolveInterface(event yaml_event_t) interface{} {
 		fallthrough
 	case c >= '0' && c <= '9':
 		i := int64(0)
-		if resolve_int(val, reflect.ValueOf(&i).Elem()) == nil {
+		if _, err := resolve_int(val, reflect.ValueOf(&i).Elem()); err == nil {
 			return i
 		}
 		f := float64(0)
-		if resolve_float(val, reflect.ValueOf(&f).Elem()) == nil {
+		if _, err := resolve_float(val, reflect.ValueOf(&f).Elem()); err == nil {
 			return f
 		}
 
 		if !sign {
 			t := time.Time{}
-			if resolve_time(val, reflect.ValueOf(&t).Elem()) == nil {
+			if _, err := resolve_time(val, reflect.ValueOf(&t).Elem()); err == nil {
 				return t
 			}
 		}
@@ -335,17 +335,17 @@ func resolveInterface(event yaml_event_t) interface{} {
 			return nil
 		}
 		b := false
-		if resolve_bool(val, reflect.ValueOf(&b).Elem()) == nil {
+		if _, err := resolve_bool(val, reflect.ValueOf(&b).Elem()); err == nil {
 			return b
 		}
 	case c == '.':
 		f := float64(0)
-		if resolve_float(val, reflect.ValueOf(&f).Elem()) == nil {
+		if _, err := resolve_float(val, reflect.ValueOf(&f).Elem()); err == nil {
 			return f
 		}
 	case bytes.IndexByte(bools, c) != -1:
 		b := false
-		if resolve_bool(val, reflect.ValueOf(&b).Elem()) == nil {
+		if _, err := resolve_bool(val, reflect.ValueOf(&b).Elem()); err == nil {
 			return b
 		}
 	}

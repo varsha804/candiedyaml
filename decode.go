@@ -11,6 +11,10 @@ import (
 	"strings"
 )
 
+type Unmarshaler interface {
+	UnmarshalYAML(tag string, value interface{}) error
+}
+
 type Decoder struct {
 	parser yaml_parser_t
 	event  yaml_event_t
@@ -174,7 +178,7 @@ func (d *Decoder) anchor(rv reflect.Value) {
 	}
 }
 
-func (d *Decoder) indirect(v reflect.Value) reflect.Value {
+func (d *Decoder) indirect(v reflect.Value) (Unmarshaler, reflect.Value) {
 	// If v is a named type and is addressable,
 	// start with its address, so that if the type has pointer methods,
 	// we find them.
@@ -200,10 +204,17 @@ func (d *Decoder) indirect(v reflect.Value) reflect.Value {
 			v.Set(reflect.New(v.Type().Elem()))
 		}
 
+		if v.Type().NumMethod() > 0 {
+			if u, ok := v.Interface().(Unmarshaler); ok {
+				var temp interface{}
+				return u, reflect.ValueOf(&temp)
+			}
+		}
+
 		v = v.Elem()
 	}
 
-	return v
+	return nil, v
 }
 
 func (d *Decoder) sequence(v reflect.Value) {
@@ -211,7 +222,16 @@ func (d *Decoder) sequence(v reflect.Value) {
 		d.error(fmt.Errorf("Expected sequence start - found %d", d.event.event_type))
 	}
 
-	pv := d.indirect(v)
+	u, pv := d.indirect(v)
+	if u != nil {
+		defer func() {
+			if err := u.UnmarshalYAML("!!seq", pv.Interface()); err != nil {
+				d.error(err)
+			}
+		}()
+		_, pv = d.indirect(pv)
+	}
+
 	v = pv
 
 	// Check type of target.
@@ -285,7 +305,15 @@ func (d *Decoder) sequence(v reflect.Value) {
 }
 
 func (d *Decoder) mapping(v reflect.Value) {
-	pv := d.indirect(v)
+	u, pv := d.indirect(v)
+	if u != nil {
+		defer func() {
+			if err := u.UnmarshalYAML("!!map", pv.Interface()); err != nil {
+				d.error(err)
+			}
+		}()
+		_, pv = d.indirect(pv)
+	}
 	v = pv
 
 	// Decoding into nil interface?  Switch to non-reflect code.
@@ -385,11 +413,22 @@ func (d *Decoder) mappingStruct(v reflect.Value) {
 }
 
 func (d *Decoder) scalar(v reflect.Value) {
-	pv := d.indirect(v)
+	u, pv := d.indirect(v)
 
+	var tag string
+	if u != nil {
+		defer func() {
+			if err := u.UnmarshalYAML(tag, pv.Interface()); err != nil {
+				d.error(err)
+			}
+		}()
+
+		_, pv = d.indirect(pv)
+	}
 	v = pv
 
-	err := resolve(d.event, v)
+	var err error
+	tag, err = resolve(d.event, v)
 	if err != nil {
 		d.error(err)
 	}

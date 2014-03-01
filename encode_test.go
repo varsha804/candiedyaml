@@ -391,7 +391,8 @@ var _ = Describe("Encode", func() {
 			})
 			It("skips the Marshaler when its a value", func() {
 				enc.Encode(hasPtrMarshaler{Value: map[string]string{"a": "b"}})
-				Ω(buf.String()).Should(Equal(`"Value":
+				Ω(buf.String()).Should(Equal(`"Tag": ""
+"Value":
   "a": "b"
 `))
 			})
@@ -405,14 +406,24 @@ type hasMarshaler struct {
 
 func (m hasMarshaler) MarshalYAML() (tag string, value interface{}) {
 	return "", m.Value
+}
 
+func (m hasMarshaler) UnmarshalYAML(tag string, value interface{}) error {
+	m.Value = value
+	return nil
 }
 
 type hasPtrMarshaler struct {
+	Tag   string
 	Value interface{}
 }
 
 func (m *hasPtrMarshaler) MarshalYAML() (tag string, value interface{}) {
 	return "", m.Value
+}
 
+func (m *hasPtrMarshaler) UnmarshalYAML(tag string, value interface{}) error {
+	m.Tag = tag
+	m.Value = value
+	return nil
 }

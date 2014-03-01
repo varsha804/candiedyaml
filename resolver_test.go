@@ -36,8 +36,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&aString)
 				event.value = []byte("abc")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!str"))
 				Ω(aString).To(Equal("abc"))
 			})
 
@@ -46,8 +47,9 @@ var _ = Describe("Resolver", func() {
 					aString := "abc"
 					v := reflect.ValueOf(&aString)
 
-					err := resolve(event, v.Elem())
+					tag, err := resolve(event, v.Elem())
 					Ω(err).ShouldNot(HaveOccurred())
+					Ω(tag).Should(Equal("!!null"))
 					Ω(aString).To(Equal(""))
 				})
 			})
@@ -58,8 +60,9 @@ var _ = Describe("Resolver", func() {
 					pString := &aString
 					v := reflect.ValueOf(&pString)
 
-					err := resolve(event, v.Elem())
+					tag, err := resolve(event, v.Elem())
 					Ω(err).ShouldNot(HaveOccurred())
+					Ω(tag).Should(Equal("!!null"))
 					Ω(pString).To(BeNil())
 				})
 			})
@@ -73,8 +76,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&b)
 				event.value = []byte(val)
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!bool"))
 				Ω(b).To(Equal(expected))
 			}
 
@@ -113,7 +117,7 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&b)
 				event.value = []byte("fail")
 
-				err := resolve(event, v.Elem())
+				_, err := resolve(event, v.Elem())
 				Ω(err).Should(HaveOccurred())
 			})
 
@@ -122,8 +126,9 @@ var _ = Describe("Resolver", func() {
 					b := true
 					v := reflect.ValueOf(&b)
 
-					err := resolve(event, v.Elem())
+					tag, err := resolve(event, v.Elem())
 					Ω(err).ShouldNot(HaveOccurred())
+					Ω(tag).Should(Equal("!!null"))
 					Ω(b).To(BeFalse())
 				})
 			})
@@ -134,8 +139,9 @@ var _ = Describe("Resolver", func() {
 					pb := &b
 					v := reflect.ValueOf(&pb)
 
-					err := resolve(event, v.Elem())
+					tag, err := resolve(event, v.Elem())
 					Ω(err).ShouldNot(HaveOccurred())
+					Ω(tag).Should(Equal("!!null"))
 					Ω(pb).To(BeNil())
 				})
 			})
@@ -147,8 +153,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("1234")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!int"))
 				Ω(i).To(Equal(1234))
 			})
 
@@ -157,8 +164,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("+678")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!int"))
 				Ω(i).To(Equal(int16(678)))
 			})
 
@@ -167,8 +175,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("-2345")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!int"))
 				Ω(i).To(Equal(int32(-2345)))
 			})
 
@@ -177,8 +186,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("0b11")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!int"))
 				Ω(i).To(Equal(3))
 			})
 
@@ -187,8 +197,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("012")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!int"))
 				Ω(i).To(Equal(10))
 			})
 
@@ -197,8 +208,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("0xff")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!int"))
 				Ω(i).To(Equal(255))
 			})
 
@@ -207,8 +219,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("1:30:00")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!int"))
 				Ω(i).To(Equal(5400))
 			})
 
@@ -217,7 +230,7 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("2345")
 
-				err := resolve(event, v.Elem())
+				_, err := resolve(event, v.Elem())
 				Ω(err).Should(HaveOccurred())
 			})
 
@@ -226,7 +239,7 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("234f")
 
-				err := resolve(event, v.Elem())
+				_, err := resolve(event, v.Elem())
 				Ω(err).Should(HaveOccurred())
 			})
 
@@ -235,8 +248,9 @@ var _ = Describe("Resolver", func() {
 					i := 1
 					v := reflect.ValueOf(&i)
 
-					err := resolve(event, v.Elem())
+					tag, err := resolve(event, v.Elem())
 					Ω(err).ShouldNot(HaveOccurred())
+					Ω(tag).Should(Equal("!!null"))
 					Ω(i).To(Equal(0))
 				})
 			})
@@ -247,8 +261,9 @@ var _ = Describe("Resolver", func() {
 					pi := &i
 					v := reflect.ValueOf(&pi)
 
-					err := resolve(event, v.Elem())
+					tag, err := resolve(event, v.Elem())
 					Ω(err).ShouldNot(HaveOccurred())
+					Ω(tag).Should(Equal("!!null"))
 					Ω(pi).To(BeNil())
 				})
 			})
@@ -260,8 +275,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("1234")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!int"))
 				Ω(i).To(Equal(uint(1234)))
 			})
 
@@ -270,8 +286,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("+678")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!int"))
 				Ω(i).To(Equal(uint16(678)))
 			})
 
@@ -280,8 +297,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("0b11")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!int"))
 				Ω(i).To(Equal(uint(3)))
 			})
 
@@ -290,8 +308,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("012")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!int"))
 				Ω(i).To(Equal(uint(10)))
 			})
 
@@ -300,8 +319,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("0xff")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!int"))
 				Ω(i).To(Equal(uint(255)))
 			})
 
@@ -310,8 +330,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("1:30:01")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!int"))
 				Ω(i).To(Equal(uint(5401)))
 			})
 
@@ -320,7 +341,7 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("-2345")
 
-				err := resolve(event, v.Elem())
+				_, err := resolve(event, v.Elem())
 				Ω(err).Should(HaveOccurred())
 			})
 
@@ -329,7 +350,7 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("2345")
 
-				err := resolve(event, v.Elem())
+				_, err := resolve(event, v.Elem())
 				Ω(err).Should(HaveOccurred())
 			})
 
@@ -338,8 +359,9 @@ var _ = Describe("Resolver", func() {
 					i := uint(1)
 					v := reflect.ValueOf(&i)
 
-					err := resolve(event, v.Elem())
+					tag, err := resolve(event, v.Elem())
 					Ω(err).ShouldNot(HaveOccurred())
+					Ω(tag).Should(Equal("!!null"))
 					Ω(i).To(Equal(uint(0)))
 				})
 			})
@@ -350,8 +372,9 @@ var _ = Describe("Resolver", func() {
 					pi := &i
 					v := reflect.ValueOf(&pi)
 
-					err := resolve(event, v.Elem())
+					tag, err := resolve(event, v.Elem())
 					Ω(err).ShouldNot(HaveOccurred())
+					Ω(tag).Should(Equal("!!null"))
 					Ω(pi).To(BeNil())
 				})
 			})
@@ -364,8 +387,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&f)
 				event.value = []byte("2345.01")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!float"))
 				Ω(f).To(Equal(float32(2345.01)))
 			})
 
@@ -374,8 +398,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&f)
 				event.value = []byte("-456456.01")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!float"))
 				Ω(f).To(Equal(float64(-456456.01)))
 			})
 
@@ -384,8 +409,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&f)
 				event.value = []byte("+.inf")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!float"))
 				Ω(f).To(Equal(math.Inf(1)))
 			})
 
@@ -394,8 +420,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&f)
 				event.value = []byte("-.inf")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!float"))
 				Ω(f).To(Equal(float32(math.Inf(-1))))
 			})
 
@@ -404,8 +431,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&f)
 				event.value = []byte(".NaN")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!float"))
 				Ω(math.IsNaN(f)).To(BeTrue())
 			})
 
@@ -414,8 +442,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&f)
 				event.value = []byte("1:30:02")
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal("!!float"))
 				Ω(f).To(Equal(float64(5402)))
 			})
 
@@ -424,7 +453,7 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("123e10000")
 
-				err := resolve(event, v.Elem())
+				_, err := resolve(event, v.Elem())
 				Ω(err).Should(HaveOccurred())
 			})
 
@@ -433,7 +462,7 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&i)
 				event.value = []byte("123e1a")
 
-				err := resolve(event, v.Elem())
+				_, err := resolve(event, v.Elem())
 				Ω(err).Should(HaveOccurred())
 			})
 
@@ -442,8 +471,9 @@ var _ = Describe("Resolver", func() {
 					f := float64(1)
 					v := reflect.ValueOf(&f)
 
-					err := resolve(event, v.Elem())
+					tag, err := resolve(event, v.Elem())
 					Ω(err).ShouldNot(HaveOccurred())
+					Ω(tag).Should(Equal("!!null"))
 					Ω(f).To(Equal(0.0))
 				})
 			})
@@ -454,8 +484,9 @@ var _ = Describe("Resolver", func() {
 					pf := &f
 					v := reflect.ValueOf(&pf)
 
-					err := resolve(event, v.Elem())
+					tag, err := resolve(event, v.Elem())
 					Ω(err).ShouldNot(HaveOccurred())
+					Ω(tag).Should(Equal("!!null"))
 					Ω(pf).To(BeNil())
 				})
 			})
@@ -467,8 +498,9 @@ var _ = Describe("Resolver", func() {
 				v := reflect.ValueOf(&d)
 				event.value = []byte(val)
 
-				err := resolve(event, v.Elem())
+				tag, err := resolve(event, v.Elem())
 				Ω(err).ShouldNot(HaveOccurred())
+				Ω(tag).Should(Equal(""))
 				Ω(d).To(Equal(date))
 			}
 
@@ -497,8 +529,9 @@ var _ = Describe("Resolver", func() {
 					d := time.Now()
 					v := reflect.ValueOf(&d)
 
-					err := resolve(event, v.Elem())
+					tag, err := resolve(event, v.Elem())
 					Ω(err).ShouldNot(HaveOccurred())
+					Ω(tag).Should(Equal("!!null"))
 					Ω(d).To(Equal(time.Time{}))
 				})
 			})
@@ -509,8 +542,9 @@ var _ = Describe("Resolver", func() {
 					pd := &d
 					v := reflect.ValueOf(&pd)
 
-					err := resolve(event, v.Elem())
+					tag, err := resolve(event, v.Elem())
 					Ω(err).ShouldNot(HaveOccurred())
+					Ω(tag).Should(Equal("!!null"))
 					Ω(pd).To(BeNil())
 				})
 			})
@@ -522,7 +556,7 @@ var _ = Describe("Resolver", func() {
 			v := reflect.ValueOf(&pString)
 			event.value = []byte("abc")
 
-			err := resolve(event, v.Elem())
+			_, err := resolve(event, v.Elem())
 			Ω(err).Should(HaveOccurred())
 		})
 
