@@ -398,6 +398,14 @@ var _ = Describe("Encode", func() {
 			})
 		})
 	})
+
+	Context("Number type", func() {
+		It("encodes as a number", func() {
+			n := Number("12345")
+			enc.Encode(n)
+			Ω(buf.String()).Should(Equal("12345\n"))
+		})
+	})
 })
 
 type hasMarshaler struct {

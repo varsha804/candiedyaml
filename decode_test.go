@@ -427,4 +427,47 @@ var _ = Describe("Decode", func() {
 		})
 	})
 
+	Context("Marshals into a Number", func() {
+		It("when the number is an int", func() {
+			d := NewDecoder(strings.NewReader("123\n"))
+			d.UseNumber()
+			var v Number
+
+			err := d.Decode(&v)
+			Ω(err).ShouldNot(HaveOccurred())
+			Ω(v.String()).Should(Equal("123"))
+		})
+
+		It("when the number is an float", func() {
+			d := NewDecoder(strings.NewReader("1.23\n"))
+			d.UseNumber()
+			var v Number
+
+			err := d.Decode(&v)
+			Ω(err).ShouldNot(HaveOccurred())
+			Ω(v.String()).Should(Equal("1.23"))
+		})
+
+		It("it fails when its a non-Number", func() {
+			d := NewDecoder(strings.NewReader("on\n"))
+			d.UseNumber()
+			var v Number
+
+			err := d.Decode(&v)
+			Ω(err).Should(HaveOccurred())
+		})
+
+		It("returns a Number", func() {
+			d := NewDecoder(strings.NewReader("123\n"))
+			d.UseNumber()
+			var v interface{}
+
+			err := d.Decode(&v)
+			Ω(err).ShouldNot(HaveOccurred())
+			Ω(v).Should(BeAssignableToTypeOf(Number("")))
+
+			n := v.(Number)
+			Ω(n.String()).Should(Equal("123"))
+		})
+	})
 })

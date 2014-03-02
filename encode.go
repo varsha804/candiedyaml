@@ -1,6 +1,7 @@
 package candiedyaml
 
 import (
+	"bytes"
 	"encoding/base64"
 	"io"
 	"math"
@@ -13,6 +14,7 @@ import (
 var (
 	timeTimeType  = reflect.TypeOf(time.Time{})
 	marshalerType = reflect.TypeOf(new(Marshaler)).Elem()
+	numberType    = reflect.TypeOf(Number(""))
 )
 
 type Marshaler interface {
@@ -26,6 +28,13 @@ type Encoder struct {
 	event   yaml_event_t
 	flow    bool
 	err     error
+}
+
+func Marshal(v interface{}) ([]byte, error) {
+	b := bytes.Buffer{}
+	e := NewEncoder(&b)
+	err := e.Encode(v)
+	return b.Bytes(), err
 }
 
 // NewEncoder returns a new encoder that writes to w.
@@ -229,6 +238,10 @@ func (e *Encoder) emitString(tag string, v reflect.Value) {
 	s := v.String()
 
 	style = yaml_DOUBLE_QUOTED_SCALAR_STYLE
+	if v.Type() == numberType {
+		style = yaml_PLAIN_SCALAR_STYLE
+	}
+
 	e.emitScalar(s, "", tag, style)
 }
 
