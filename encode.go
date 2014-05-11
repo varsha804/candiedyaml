@@ -252,8 +252,17 @@ func (e *Encoder) emitString(tag string, v reflect.Value) {
 	s := v.String()
 
 	style = yaml_DOUBLE_QUOTED_SCALAR_STYLE
+
 	if v.Type() == numberType {
 		style = yaml_PLAIN_SCALAR_STYLE
+	} else {
+		event := yaml_event_t{
+			implicit: true,
+			value:    []byte(s),
+		}
+		if tag, _ := resolveInterface(event, false); tag == "!!str" {
+			style = yaml_PLAIN_SCALAR_STYLE
+		}
 	}
 
 	e.emitScalar(s, "", tag, style)

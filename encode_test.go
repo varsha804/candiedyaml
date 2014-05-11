@@ -34,7 +34,7 @@ var _ = Describe("Encode", func() {
 	Context("Scalars", func() {
 		It("handles strings", func() {
 			enc.Encode("abc")
-			Ω(buf.String()).Should(Equal(`"abc"
+			Ω(buf.String()).Should(Equal(`abc
 `))
 		})
 
@@ -124,12 +124,12 @@ var _ = Describe("Encode", func() {
 					batter{Name: "Sammy Sosa", HR: 63, AVG: 0.288},
 				}
 				enc.Encode(batters)
-				Ω(buf.String()).Should(Equal(`- "Name": "Mark McGwire"
-  "HR": 65
-  "AVG": 0.278
-- "Name": "Sammy Sosa"
-  "HR": 63
-  "AVG": 0.288
+				Ω(buf.String()).Should(Equal(`- Name: Mark McGwire
+  HR: 65
+  AVG: 0.278
+- Name: Sammy Sosa
+  HR: 63
+  AVG: 0.288
 `))
 			})
 
@@ -145,12 +145,12 @@ var _ = Describe("Encode", func() {
 					batter{Name: "Sammy Sosa", HR: 63, AVG: 0.288},
 				}
 				enc.Encode(batters)
-				Ω(buf.String()).Should(Equal(`- "name": "Mark McGwire"
-  "HR": 65
-  "avg": 0.278
-- "name": "Sammy Sosa"
-  "HR": 63
-  "avg": 0.288
+				Ω(buf.String()).Should(Equal(`- name: Mark McGwire
+  HR: 65
+  avg: 0.278
+- name: Sammy Sosa
+  HR: 63
+  avg: 0.288
 `))
 			})
 
@@ -174,10 +174,10 @@ var _ = Describe("Encode", func() {
 
 				enc.Encode(cfg)
 
-				Ω(buf.String()).Should(Equal(`"TopString": "def"
-"Nested":
-  "str": "abc"
-  "int": 123
+				Ω(buf.String()).Should(Equal(`TopString: def
+Nested:
+  str: abc
+  int: 123
 `))
 			})
 
@@ -201,9 +201,9 @@ var _ = Describe("Encode", func() {
 
 				enc.Encode(cfg)
 
-				Ω(buf.String()).Should(Equal(`"TopString": "def"
-"str": "abc"
-"int": 123
+				Ω(buf.String()).Should(Equal(`TopString: def
+str: abc
+int: 123
 `))
 			})
 
@@ -227,8 +227,8 @@ var _ = Describe("Encode", func() {
 
 				enc.Encode(cfg)
 
-				Ω(buf.String()).Should(Equal(`"str": "def"
-"int": 123
+				Ω(buf.String()).Should(Equal(`str: def
+int: 123
 `))
 			})
 
@@ -241,9 +241,9 @@ var _ = Describe("Encode", func() {
 			val := []string{"a", "b", "c"}
 			enc.Encode(val)
 
-			Ω(buf.String()).Should(Equal(`- "a"
-- "b"
-- "c"
+			Ω(buf.String()).Should(Equal(`- a
+- b
+- c
 `))
 		})
 	})
@@ -256,9 +256,9 @@ var _ = Describe("Encode", func() {
 				"avg":  "0.278",
 			})
 
-			Ω(buf.String()).Should(Equal(`"avg": "0.278"
-"hr": "65"
-"name": "Mark McGwire"
+			Ω(buf.String()).Should(Equal(`avg: "0.278"
+hr: "65"
+name: Mark McGwire
 `))
 		})
 
@@ -269,9 +269,9 @@ var _ = Describe("Encode", func() {
 				"avg":  0.278,
 			})
 
-			Ω(buf.String()).Should(Equal(`"avg": 0.278
-"hr": 65
-"name": "Mark McGwire"
+			Ω(buf.String()).Should(Equal(`avg: 0.278
+hr: 65
+name: Mark McGwire
 `))
 		})
 	})
@@ -289,12 +289,12 @@ var _ = Describe("Encode", func() {
 				},
 			})
 
-			Ω(buf.String()).Should(Equal(`- "avg": 0.278
-  "hr": 65
-  "name": "Mark McGwire"
-- "avg": 0.288
-  "hr": 63
-  "name": "Sammy Sosa"
+			Ω(buf.String()).Should(Equal(`- avg: 0.278
+  hr: 65
+  name: Mark McGwire
+- avg: 0.288
+  hr: 63
+  name: Sammy Sosa
 `))
 		})
 	})
@@ -307,15 +307,15 @@ var _ = Describe("Encode", func() {
 				"avg":  []interface{}{0.278, 0.288},
 			})
 
-			Ω(buf.String()).Should(Equal(`"avg":
+			Ω(buf.String()).Should(Equal(`avg:
 - 0.278
 - 0.288
-"hr":
+hr:
 - 65
 - 63
-"name":
-- "Mark McGwire"
-- "Sammy Sosa"
+name:
+- Mark McGwire
+- Sammy Sosa
 `))
 		})
 	})
@@ -332,7 +332,7 @@ var _ = Describe("Encode", func() {
 			enc.Encode(o{
 				I: i{A: "abc"},
 			})
-			Ω(buf.String()).Should(Equal(`"i": {"A": "abc"}
+			Ω(buf.String()).Should(Equal(`i: {A: abc}
 `))
 		})
 
@@ -347,7 +347,7 @@ var _ = Describe("Encode", func() {
 			enc.Encode(o{
 				I: []i{{A: "abc"}},
 			})
-			Ω(buf.String()).Should(Equal(`"i": [{"A": "abc"}]
+			Ω(buf.String()).Should(Equal(`i: [{A: abc}]
 `))
 		})
 	})
@@ -364,7 +364,7 @@ var _ = Describe("Encode", func() {
 			enc.Encode(o{
 				I: []i{{A: nil}},
 			})
-			Ω(buf.String()).Should(Equal(`"i": [{}]
+			Ω(buf.String()).Should(Equal(`i: [{}]
 `))
 		})
 
@@ -378,7 +378,7 @@ var _ = Describe("Encode", func() {
 			}
 
 			enc.Encode(a{B: "b", C: "c"})
-			Ω(buf.String()).Should(Equal(`"C": "c"
+			Ω(buf.String()).Should(Equal(`C: c
 `))
 		})
 	})
@@ -392,7 +392,7 @@ var _ = Describe("Encode", func() {
 
 			It("uses the Marshaler interface when a pointer", func() {
 				enc.Encode(&hasMarshaler{Value: "abc"})
-				Ω(buf.String()).Should(Equal(`"abc"
+				Ω(buf.String()).Should(Equal(`abc
 `))
 			})
 		})
@@ -400,14 +400,14 @@ var _ = Describe("Encode", func() {
 		Context("Receiver is a pointer", func() {
 			It("uses the Marshaler interface when a pointer", func() {
 				enc.Encode(&hasPtrMarshaler{Value: map[string]string{"a": "b"}})
-				Ω(buf.String()).Should(Equal(`"a": "b"
+				Ω(buf.String()).Should(Equal(`a: b
 `))
 			})
 			It("skips the Marshaler when its a value", func() {
 				enc.Encode(hasPtrMarshaler{Value: map[string]string{"a": "b"}})
-				Ω(buf.String()).Should(Equal(`"Tag": ""
-"Value":
-  "a": "b"
+				Ω(buf.String()).Should(Equal(`Tag: ""
+Value:
+  a: b
 `))
 			})
 		})
