@@ -28,6 +28,8 @@ import (
 
 var byteSliceType = reflect.TypeOf([]byte(nil))
 
+var binary_tags = [][]byte{[]byte("!binary"), []byte("tag:yaml.org,2002:binary")}
+
 var bool_values map[string]bool
 var null_values map[string]bool
 
@@ -78,6 +80,18 @@ func resolve(event yaml_event_t, v reflect.Value, useNumber bool) (string, error
 				return "", errors.New("Not a Number: " + reflect.TypeOf(i).String())
 			}
 		} else {
+			if len(event.tag) > 0 {
+				for _, tag := range binary_tags {
+					if bytes.Equal(event.tag, tag) {
+						b, err := resolve_binary(event.value)
+						if err != nil {
+							return "", err
+						}
+						val = string(b)
+						break
+					}
+				}
+			}
 			v.SetString(val)
 		}
 	case reflect.Bool:
@@ -97,18 +111,23 @@ func resolve(event yaml_event_t, v reflect.Value, useNumber bool) (string, error
 		if v.Type() != byteSliceType {
 			return "", errors.New("Cannot resolve into " + v.Type().String())
 		}
-		b := make([]byte, base64.StdEncoding.DecodedLen(len(event.value)))
-		n, err := base64.StdEncoding.Decode(b, event.value)
+		b, err := resolve_binary(event.value)
 		if err != nil {
 			return "", err
 		}
 
-		v.Set(reflect.ValueOf(b[0:n]))
+		v.Set(reflect.ValueOf(b))
 	default:
 		return "", errors.New("Resolve failed for " + v.Kind().String())
 	}
 
 	return "!!str", nil
+}
+
+func resolve_binary(value []byte) ([]byte, error) {
+	b := make([]byte, base64.StdEncoding.DecodedLen(len(value)))
+	n, err := base64.StdEncoding.Decode(b, value)
+	return b[:n], err
 }
 
 func resolve_bool(val string, v reflect.Value) (string, error) {
