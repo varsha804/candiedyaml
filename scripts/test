@@ -3,8 +3,9 @@
 
 set -e -x
 
-go get -t -u -v ./...
-
 go install github.com/onsi/ginkgo/ginkgo
+
+export PATH=$HOME/gopath/bin:$PATH
+echo $PATH
 
 ginkgo -r -failOnPending -randomizeAllSpecs -race "$@"
