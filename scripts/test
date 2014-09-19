@@ -12,6 +12,9 @@ export PATH=$FIRST_GOPATH/bin:$PATH
 
 go get github.com/dustin/goveralls
 go get code.google.com/p/go.tools/cmd/cover
+
+go get -t -u -v ./...
+
 go install github.com/onsi/ginkgo/ginkgo
 
 ginkgo -cover -r -failOnPending -randomizeAllSpecs -race "$@"
