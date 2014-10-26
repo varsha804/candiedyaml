@@ -292,7 +292,6 @@ var _ = Describe("Decode", func() {
 			Ω(v).Should(Equal(map[string]interface{}{
 				"canonical":   int64(12345),
 				"decimal":     int64(12345),
-				"sexagesimal": int64(12345),
 				"octal":       int64(12),
 				"hexadecimal": int64(12),
 			}))
@@ -308,7 +307,6 @@ var _ = Describe("Decode", func() {
 			Ω(v).Should(Equal(map[string]int64{
 				"canonical":   int64(12345),
 				"decimal":     int64(12345),
-				"sexagesimal": int64(12345),
 				"octal":       int64(12),
 				"hexadecimal": int64(12),
 			}))
@@ -375,7 +373,6 @@ var _ = Describe("Decode", func() {
 		Ω(v).Should(Equal(map[string]float64{
 			"canonical":         float64(1230.15),
 			"exponential":       float64(1230.15),
-			"sexagesimal":       float64(1230.15),
 			"fixed":             float64(1230.15),
 			"negative infinity": math.Inf(-1),
 		}))
@@ -411,16 +408,41 @@ var _ = Describe("Decode", func() {
 		}))
 	})
 
-	It("Respects tags", func() {
-		f, _ := os.Open("fixtures/specification/example2_23_non_date.yaml")
-		d := NewDecoder(f)
-		v := make(map[string]string)
+	Context("Tags", func() {
+		It("Respects tags", func() {
+			f, _ := os.Open("fixtures/specification/example2_23_non_date.yaml")
+			d := NewDecoder(f)
+			v := make(map[string]string)
 
-		err := d.Decode(&v)
-		Ω(err).ShouldNot(HaveOccurred())
-		Ω(v).Should(Equal(map[string]string{
-			"not-date": "2002-04-28",
-		}))
+			err := d.Decode(&v)
+			Ω(err).ShouldNot(HaveOccurred())
+			Ω(v).Should(Equal(map[string]string{
+				"not-date": "2002-04-28",
+			}))
+		})
+
+		It("handles non-specific tags", func() {
+			d := NewDecoder(strings.NewReader(`
+---
+not_parsed: ! 123
+`))
+			v := make(map[string]int)
+			err := d.Decode(&v)
+			Ω(err).ShouldNot(HaveOccurred())
+			Ω(v).Should(Equal(map[string]int{"not_parsed": 123}))
+		})
+
+		It("handles non-specific tags", func() {
+			d := NewDecoder(strings.NewReader(`
+---
+? a complex key
+: ! "123"
+`))
+			v := make(map[string]string)
+			err := d.Decode(&v)
+			Ω(err).ShouldNot(HaveOccurred())
+			Ω(v).Should(Equal(map[string]string{"a complex key": "123"}))
+		})
 	})
 
 	Context("Decodes binary/base64", func() {
