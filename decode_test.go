@@ -482,6 +482,14 @@ not_parsed: ! 123
 			Ω(v).Should(Equal("abcdefg"))
 		})
 
+		It("to interface", func() {
+			d := NewDecoder(strings.NewReader("!binary YWJjZGVmZw=="))
+			var v interface{}
+
+			err := d.Decode(&v)
+			Ω(err).ShouldNot(HaveOccurred())
+			Ω(v).Should(Equal([]byte("abcdefg")))
+		})
 	})
 
 	Context("Aliases", func() {
@@ -533,6 +541,36 @@ rbi: *ss
 			})
 		})
 
+		It("aliases to different types", func() {
+			type S struct {
+				A map[string]int
+				C map[string]string
+			}
+			d := NewDecoder(strings.NewReader(`
+---
+a: &map
+  b : 1
+c: *map
+`))
+			var s S
+			err := d.Decode(&s)
+			Ω(err).ShouldNot(HaveOccurred())
+			Ω(s).Should(Equal(S{
+				A: map[string]int{"b": 1},
+				C: map[string]string{"b": "1"},
+			}))
+		})
+
+		It("fails if an anchor is undefined", func() {
+			d := NewDecoder(strings.NewReader(`
+---
+a: *missing
+`))
+			m := make(map[string]string)
+			err := d.Decode(&m)
+			Ω(err).Should(HaveOccurred())
+		})
+
 		Context("to Interface", func() {
 			It("aliases scalars", func() {
 				f, _ := os.Open("fixtures/specification/example2_10.yaml")
@@ -580,14 +618,89 @@ rbi: *ss
 				}))
 			})
 
-			It("supports binary", func() {
-				d := NewDecoder(strings.NewReader("!binary YWJjZGVmZw=="))
-				var v interface{}
-
+			It("supports duplicate aliases", func() {
+				d := NewDecoder(strings.NewReader(`
+---
+a: &a
+  b: 1
+x: *a
+y: *a
+`))
+				v := make(map[string]interface{})
 				err := d.Decode(&v)
 				Ω(err).ShouldNot(HaveOccurred())
-				Ω(v).Should(Equal([]byte("abcdefg")))
+				Ω(v).Should(Equal(map[string]interface{}{
+					"a": map[interface{}]interface{}{"b": int64(1)},
+					"x": map[interface{}]interface{}{"b": int64(1)},
+					"y": map[interface{}]interface{}{"b": int64(1)},
+				}))
 			})
+
+			It("supports overriden anchors", func() {
+				d := NewDecoder(strings.NewReader(`
+---
+First occurrence: &anchor Foo
+Second occurrence: *anchor
+Override anchor: &anchor Bar
+Reuse anchor: *anchor
+`))
+				v := make(map[string]interface{})
+				err := d.Decode(&v)
+				Ω(err).ShouldNot(HaveOccurred())
+				Ω(v).Should(Equal(map[string]interface{}{
+					"First occurrence":  "Foo",
+					"Second occurrence": "Foo",
+					"Override anchor":   "Bar",
+					"Reuse anchor":      "Bar",
+				}))
+			})
+
+			It("fails if an anchor is undefined", func() {
+				d := NewDecoder(strings.NewReader(`
+---
+a: *missing
+`))
+				var i interface{}
+				err := d.Decode(&i)
+				Ω(err).Should(HaveOccurred())
+			})
+
+		})
+
+		PIt("supports composing aliases", func() {
+			d := NewDecoder(strings.NewReader(`
+---
+a: &a b
+x: &b
+  d: *a
+z: *b
+`))
+			v := make(map[string]interface{})
+			err := d.Decode(&v)
+			Ω(err).ShouldNot(HaveOccurred())
+			Ω(v).Should(Equal(map[string]interface{}{
+				"a": map[interface{}]interface{}{"b": int64(1)},
+				"x": map[interface{}]interface{}{"b": int64(1)},
+				"y": map[interface{}]interface{}{"b": int64(1)},
+			}))
+		})
+
+		PIt("redefinition while composing aliases", func() {
+			d := NewDecoder(strings.NewReader(`
+---
+a: &a b
+x: &c
+  d : &a 1
+y: *c
+`))
+			v := make(map[string]interface{})
+			err := d.Decode(&v)
+			Ω(err).ShouldNot(HaveOccurred())
+			Ω(v).Should(Equal(map[string]interface{}{
+				"a": map[interface{}]interface{}{"b": int64(1)},
+				"x": map[interface{}]interface{}{"b": int64(1)},
+				"y": map[interface{}]interface{}{"b": int64(1)},
+			}))
 		})
 	})
 
