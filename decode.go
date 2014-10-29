@@ -375,7 +375,9 @@ done:
 		v.Set(reflect.MakeSlice(v.Type(), 0, 0))
 	}
 
-	d.nextEvent()
+	if d.event.event_type != yaml_DOCUMENT_END_EVENT {
+		d.nextEvent()
+	}
 }
 
 func (d *Decoder) mapping(v reflect.Value) {
@@ -420,8 +422,10 @@ func (d *Decoder) mapping(v reflect.Value) {
 done:
 	for {
 		switch d.event.event_type {
-		case yaml_MAPPING_END_EVENT, yaml_DOCUMENT_END_EVENT:
+		case yaml_MAPPING_END_EVENT:
 			break done
+		case yaml_DOCUMENT_END_EVENT:
+			return
 		}
 
 		key := reflect.New(keyt)
@@ -451,8 +455,10 @@ func (d *Decoder) mappingStruct(v reflect.Value) {
 done:
 	for {
 		switch d.event.event_type {
-		case yaml_MAPPING_END_EVENT, yaml_DOCUMENT_END_EVENT:
+		case yaml_MAPPING_END_EVENT:
 			break done
+		case yaml_DOCUMENT_END_EVENT:
+			return
 		}
 
 		key := ""
@@ -581,7 +587,10 @@ done:
 		v = append(v, d.valueInterface())
 	}
 
-	d.nextEvent()
+	if d.event.event_type != yaml_DOCUMENT_END_EVENT {
+		d.nextEvent()
+	}
+
 	return v
 }
 
@@ -604,6 +613,9 @@ done:
 		m[key] = d.valueInterface()
 	}
 
-	d.nextEvent()
+	if d.event.event_type != yaml_DOCUMENT_END_EVENT {
+		d.nextEvent()
+	}
+
 	return m
 }

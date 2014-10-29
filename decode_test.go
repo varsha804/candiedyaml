@@ -667,7 +667,7 @@ a: *missing
 
 		})
 
-		PIt("supports composing aliases", func() {
+		It("supports composing aliases", func() {
 			d := NewDecoder(strings.NewReader(`
 ---
 a: &a b
@@ -679,27 +679,27 @@ z: *b
 			err := d.Decode(&v)
 			Ω(err).ShouldNot(HaveOccurred())
 			Ω(v).Should(Equal(map[string]interface{}{
-				"a": map[interface{}]interface{}{"b": int64(1)},
-				"x": map[interface{}]interface{}{"b": int64(1)},
-				"y": map[interface{}]interface{}{"b": int64(1)},
+				"a": "b",
+				"x": map[interface{}]interface{}{"d": "b"},
+				"z": map[interface{}]interface{}{"d": "b"},
 			}))
 		})
 
-		PIt("redefinition while composing aliases", func() {
+		It("redefinition while composing aliases", func() {
 			d := NewDecoder(strings.NewReader(`
 ---
 a: &a b
 x: &c
   d : &a 1
-y: *c
+y: *a
 `))
 			v := make(map[string]interface{})
 			err := d.Decode(&v)
 			Ω(err).ShouldNot(HaveOccurred())
 			Ω(v).Should(Equal(map[string]interface{}{
-				"a": map[interface{}]interface{}{"b": int64(1)},
-				"x": map[interface{}]interface{}{"b": int64(1)},
-				"y": map[interface{}]interface{}{"b": int64(1)},
+				"a": "b",
+				"x": map[interface{}]interface{}{"d": int64(1)},
+				"y": int64(1),
 			}))
 		})
 	})
