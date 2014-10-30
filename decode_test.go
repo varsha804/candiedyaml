@@ -138,6 +138,22 @@ var _ = Describe("Decode", func() {
 				}))
 			})
 
+			It("handles null values", func() {
+				type S struct {
+					Default interface{}
+				}
+
+				d := NewDecoder(strings.NewReader(`
+---
+default:
+`))
+				var s S
+				err := d.Decode(&s)
+				Ω(err).ShouldNot(HaveOccurred())
+				Ω(s).Should(Equal(S{Default: nil}))
+
+			})
+
 			It("ignores missing tags", func() {
 				f, _ := os.Open("fixtures/specification/example2_4.yaml")
 				d := NewDecoder(f)

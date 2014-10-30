@@ -90,7 +90,12 @@ func resolve(event yaml_event_t, v reflect.Value, useNumber bool) (string, error
 		return resolve_float(val, v, useNumber)
 	case reflect.Interface:
 		_, i := resolveInterface(event, useNumber)
-		v.Set(reflect.ValueOf(i))
+		if i != nil {
+			v.Set(reflect.ValueOf(i))
+		} else {
+			v.Set(reflect.Zero(v.Type()))
+		}
+
 	case reflect.Struct:
 		return resolve_time(val, v)
 	case reflect.Slice:
