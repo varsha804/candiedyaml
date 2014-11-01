@@ -758,7 +758,7 @@ y: *a
 
 				err := d.Decode(&v)
 				Ω(err).ShouldNot(HaveOccurred())
-				Ω(v.Tag).Should(Equal("!!str"))
+				Ω(v.Tag).Should(Equal(yaml_STR_TAG))
 				Ω(v.Value).Should(Equal("abc"))
 			})
 
@@ -768,7 +768,7 @@ y: *a
 
 				err := d.Decode(&v)
 				Ω(err).ShouldNot(HaveOccurred())
-				Ω(v.Tag).Should(Equal("!!seq"))
+				Ω(v.Tag).Should(Equal(yaml_SEQ_TAG))
 				Ω(v.Value).Should(Equal([]interface{}{"abc", "def"}))
 			})
 
@@ -778,7 +778,7 @@ y: *a
 
 				err := d.Decode(&v)
 				Ω(err).ShouldNot(HaveOccurred())
-				Ω(v.Tag).Should(Equal("!!map"))
+				Ω(v.Tag).Should(Equal(yaml_MAP_TAG))
 				Ω(v.Value).Should(Equal(map[interface{}]interface{}{"a": "bc"}))
 			})
 		})

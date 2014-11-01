@@ -297,7 +297,7 @@ func (d *Decoder) sequence(v reflect.Value) {
 	u, pv := d.indirect(v)
 	if u != nil {
 		defer func() {
-			if err := u.UnmarshalYAML("!!seq", pv.Interface()); err != nil {
+			if err := u.UnmarshalYAML(yaml_SEQ_TAG, pv.Interface()); err != nil {
 				d.error(err)
 			}
 		}()
@@ -384,7 +384,7 @@ func (d *Decoder) mapping(v reflect.Value) {
 	u, pv := d.indirect(v)
 	if u != nil {
 		defer func() {
-			if err := u.UnmarshalYAML("!!map", pv.Interface()); err != nil {
+			if err := u.UnmarshalYAML(yaml_MAP_TAG, pv.Interface()); err != nil {
 				d.error(err)
 			}
 		}()
