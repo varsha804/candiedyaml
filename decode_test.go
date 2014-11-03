@@ -409,6 +409,15 @@ default:
 		}))
 	})
 
+	It("Decodes a null ptr", func() {
+		d := NewDecoder(strings.NewReader(`null
+`))
+		var v *bool
+		err := d.Decode(&v)
+		Ω(err).ShouldNot(HaveOccurred())
+		Ω(v).Should(BeNil())
+	})
+
 	It("Decodes dates/time", func() {
 		f, _ := os.Open("fixtures/specification/example2_22.yaml")
 		d := NewDecoder(f)

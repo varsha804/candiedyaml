@@ -250,7 +250,7 @@ func (d *Decoder) end_anchor(anchor string) {
 	}
 }
 
-func (d *Decoder) indirect(v reflect.Value) (Unmarshaler, reflect.Value) {
+func (d *Decoder) indirect(v reflect.Value, decodingNull bool) (Unmarshaler, reflect.Value) {
 	// If v is a named type and is addressable,
 	// start with its address, so that if the type has pointer methods,
 	// we find them.
@@ -262,13 +262,17 @@ func (d *Decoder) indirect(v reflect.Value) (Unmarshaler, reflect.Value) {
 		// usefully addressable.
 		if v.Kind() == reflect.Interface && !v.IsNil() {
 			e := v.Elem()
-			if e.Kind() == reflect.Ptr && !e.IsNil() {
+			if e.Kind() == reflect.Ptr && !e.IsNil() && (!decodingNull || e.Elem().Kind() == reflect.Ptr) {
 				v = e
 				continue
 			}
 		}
 
 		if v.Kind() != reflect.Ptr {
+			break
+		}
+
+		if v.Elem().Kind() != reflect.Ptr && decodingNull && v.CanSet() {
 			break
 		}
 
@@ -294,14 +298,14 @@ func (d *Decoder) sequence(v reflect.Value) {
 		d.error(fmt.Errorf("Expected sequence start - found %d", d.event.event_type))
 	}
 
-	u, pv := d.indirect(v)
+	u, pv := d.indirect(v, false)
 	if u != nil {
 		defer func() {
 			if err := u.UnmarshalYAML(yaml_SEQ_TAG, pv.Interface()); err != nil {
 				d.error(err)
 			}
 		}()
-		_, pv = d.indirect(pv)
+		_, pv = d.indirect(pv, false)
 	}
 
 	v = pv
@@ -381,14 +385,14 @@ done:
 }
 
 func (d *Decoder) mapping(v reflect.Value) {
-	u, pv := d.indirect(v)
+	u, pv := d.indirect(v, false)
 	if u != nil {
 		defer func() {
 			if err := u.UnmarshalYAML(yaml_MAP_TAG, pv.Interface()); err != nil {
 				d.error(err)
 			}
 		}()
-		_, pv = d.indirect(pv)
+		_, pv = d.indirect(pv, false)
 	}
 	v = pv
 
@@ -499,7 +503,10 @@ done:
 }
 
 func (d *Decoder) scalar(v reflect.Value) {
-	u, pv := d.indirect(v)
+	val := string(d.event.value)
+	wantptr := null_values[val]
+
+	u, pv := d.indirect(v, wantptr)
 
 	var tag string
 	if u != nil {
@@ -509,7 +516,7 @@ func (d *Decoder) scalar(v reflect.Value) {
 			}
 		}()
 
-		_, pv = d.indirect(pv)
+		_, pv = d.indirect(pv, wantptr)
 	}
 	v = pv
 
