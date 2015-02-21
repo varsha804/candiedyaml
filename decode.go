@@ -174,7 +174,8 @@ func (d *Decoder) nextEvent() {
 	}
 
 	last := len(d.tracking_anchors)
-	if last > 0 {
+	// skip aliases when tracking an anchor
+	if last > 0 && d.event.event_type != yaml_ALIAS_EVENT {
 		d.tracking_anchors[last-1] = append(d.tracking_anchors[last-1], d.event)
 	}
 }

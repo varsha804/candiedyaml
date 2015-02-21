@@ -727,6 +727,25 @@ y: *a
 				"y": int64(1),
 			}))
 		})
+
+		It("can parse nested anchors", func() {
+			d := NewDecoder(strings.NewReader(`
+---
+a:
+  aa: &x
+    aaa: 1
+  ab:
+    aba: &y
+      abaa:
+        abaaa: *x
+b:
+- ba:
+    baa: *y
+`))
+			v := make(map[string]interface{})
+			err := d.Decode(&v)
+			Ω(err).ShouldNot(HaveOccurred())
+		})
 	})
 
 	Context("When decoding fails", func() {
