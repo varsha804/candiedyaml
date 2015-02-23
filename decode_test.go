@@ -855,4 +855,21 @@ b:
 			Ω(n.String()).Should(Equal("123"))
 		})
 	})
+	Context("When there are special characters", func() {
+		It("returns an error", func() {
+			d := NewDecoder(strings.NewReader(`
+---
+applications:
+ - name: m
+   services:
+       - !@#
+`))
+			var v interface{}
+
+			err := d.Decode(&v)
+			Ω(err).Should(HaveOccurred())
+			Ω(err.Error()).ShouldNot(ContainSubstring("decode.go"))
+
+		})
+	})
 })
