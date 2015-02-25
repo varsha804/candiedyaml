@@ -21,7 +21,6 @@ import (
 	"io"
 	"reflect"
 	"runtime"
-	"runtime/debug"
 	"strconv"
 	"strings"
 )
@@ -94,8 +93,7 @@ func recovery(err *error) {
 			tmpError = errors.New("Unknown panic: " + reflect.TypeOf(r).String())
 		}
 
-		stackTrace := debug.Stack()
-		*err = fmt.Errorf("%s\n%s", tmpError.Error(), string(stackTrace))
+		*err = fmt.Errorf("%s\n%s", tmpError.Error())
 	}
 }
 
