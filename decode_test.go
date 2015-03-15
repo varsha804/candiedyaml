@@ -594,6 +594,7 @@ a: *missing
 			m := make(map[string]string)
 			err := d.Decode(&m)
 			Ω(err).Should(HaveOccurred())
+			Ω(err.Error()).Should(MatchRegexp("missing anchor.*line.*column.*"))
 		})
 
 		Context("to Interface", func() {
@@ -688,6 +689,7 @@ a: *missing
 				var i interface{}
 				err := d.Decode(&i)
 				Ω(err).Should(HaveOccurred())
+				Ω(err.Error()).Should(MatchRegexp("missing anchor.*line.*column.*"))
 			})
 
 		})
@@ -756,6 +758,7 @@ b:
 
 			err := d.Decode(&v)
 			Ω(err).Should(HaveOccurred())
+			Ω(err.Error()).Should(Equal("Expected document start at line 0, column 0"))
 		})
 	})
 
@@ -840,6 +843,7 @@ b:
 
 			err := d.Decode(&v)
 			Ω(err).Should(HaveOccurred())
+			Ω(err.Error()).Should(MatchRegexp("Not a number: 'on' at line 0, column 0"))
 		})
 
 		It("returns a Number", func() {
@@ -868,8 +872,7 @@ applications:
 
 			err := d.Decode(&v)
 			Ω(err).Should(HaveOccurred())
-			Ω(err.Error()).ShouldNot(ContainSubstring("decode.go"))
-
+			Ω(err.Error()).Should(MatchRegexp("yaml.*did not find.*line.*column.*"))
 		})
 	})
 })
