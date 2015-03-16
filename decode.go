@@ -117,7 +117,7 @@ func (d *Decoder) Decode(v interface{}) (err error) {
 
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		return fmt.Errorf("Invalid type: %s at %s", rv.String(), d.event.start_mark)
+		return fmt.Errorf("Expected a pointer or nil but was a %s at %s", rv.String(), d.event.start_mark)
 	}
 
 	if d.event.event_type == yaml_NO_EVENT {
@@ -315,7 +315,7 @@ func (d *Decoder) sequence(v reflect.Value) {
 		// Otherwise it's invalid.
 		fallthrough
 	default:
-		d.error(fmt.Errorf("sequence: invalid type: %s at %s", v, d.event.start_mark))
+		d.error(fmt.Errorf("Expected an array, slice or interface{} but was a %s at %s", v, d.event.start_mark))
 	case reflect.Array:
 	case reflect.Slice:
 		break
@@ -403,7 +403,7 @@ func (d *Decoder) mapping(v reflect.Value) {
 		return
 	case reflect.Map:
 	default:
-		d.error(fmt.Errorf("mapping: invalid type: %s at %s ", v, d.event.start_mark))
+		d.error(fmt.Errorf("Expected a struct or map but was a %s at %s ", v, d.event.start_mark))
 	}
 
 	mapt := v.Type()
