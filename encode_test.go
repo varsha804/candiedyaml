@@ -16,6 +16,7 @@ package candiedyaml
 
 import (
 	"bytes"
+	"errors"
 	"math"
 	"time"
 
@@ -457,7 +458,13 @@ name:
 				Expect(err).NotTo(HaveOccurred())
 				Expect(buf.String()).To(Equal(`abc
 `))
+			})
 
+			Context("when it fails", func() {
+				It("returns an error", func() {
+					err := enc.Encode(&hasMarshaler{Value: "abc", Error: errors.New("fail")})
+					Expect(err).To(MatchError("fail"))
+				})
 			})
 		})
 
@@ -476,12 +483,20 @@ name:
 				Expect(buf.String()).To(Equal(`Tag: ""
 Value:
   a: b
+Error: null
 `))
 
 			})
 
 			Context("the receiver is nil", func() {
 				var ptr *hasPtrMarshaler
+
+				Context("when it fails", func() {
+					It("returns an error", func() {
+						err := enc.Encode(&hasPtrMarshaler{Value: "abc", Error: errors.New("fail")})
+						Expect(err).To(MatchError("fail"))
+					})
+				})
 
 				It("returns a null", func() {
 					err := enc.Encode(ptr)
@@ -566,10 +581,11 @@ Value:
 
 type hasMarshaler struct {
 	Value interface{}
+	Error error
 }
 
-func (m hasMarshaler) MarshalYAML() (tag string, value interface{}) {
-	return "", m.Value
+func (m hasMarshaler) MarshalYAML() (string, interface{}, error) {
+	return "", m.Value, m.Error
 }
 
 func (m hasMarshaler) UnmarshalYAML(tag string, value interface{}) error {
@@ -580,10 +596,11 @@ func (m hasMarshaler) UnmarshalYAML(tag string, value interface{}) error {
 type hasPtrMarshaler struct {
 	Tag   string
 	Value interface{}
+	Error error
 }
 
-func (m *hasPtrMarshaler) MarshalYAML() (tag string, value interface{}) {
-	return "", m.Value
+func (m *hasPtrMarshaler) MarshalYAML() (string, interface{}, error) {
+	return "", m.Value, m.Error
 }
 
 func (m *hasPtrMarshaler) UnmarshalYAML(tag string, value interface{}) error {
