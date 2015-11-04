@@ -42,6 +42,14 @@ var _ = Describe("Encode", func() {
 
 		})
 
+		It("handles really short strings", func() {
+			err := enc.Encode(".")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(buf.String()).To(Equal(`.
+`))
+
+		})
+
 		It("encodes strings with multilines", func() {
 			err := enc.Encode("a\nc")
 			Expect(err).NotTo(HaveOccurred())
