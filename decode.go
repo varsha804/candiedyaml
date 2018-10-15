@@ -582,7 +582,7 @@ done:
 				subv = subv.Field(i)
 			}
 		} else if d.strictMode {
-			d.error(fmt.Errorf("unable to map key %v to a struct field at %v", key, d.event.start_mark))
+			d.error(fmt.Errorf("unable to map key %q to a struct field at %v", key, d.event.start_mark))
 		}
 		d.parse(subv)
 	}

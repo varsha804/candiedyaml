@@ -183,7 +183,7 @@ default:
 
 					err := d.Decode(&v)
 					Expect(err).To(HaveOccurred())
-					expectedErrorString := fmt.Errorf("unable to map key avg to a struct field at line 3, column 8")
+					expectedErrorString := fmt.Errorf("unable to map key \"avg\" to a struct field at line 3, column 8")
 					Expect(err).To(Equal(expectedErrorString))
 				})
 			})
