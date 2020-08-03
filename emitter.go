@@ -1875,7 +1875,7 @@ func yaml_emitter_write_double_quoted_scalar(emitter *yaml_emitter_t, value []by
 				}
 				for k := (w - 1) * 4; k >= 0; k -= 4 {
 					digit := byte((v >> uint(k)) & 0x0F)
-					var c rune
+					var c byte
 					if digit > 9 {
 						c = digit + 'A' - 10
 					} else {
