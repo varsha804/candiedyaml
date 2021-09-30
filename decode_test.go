@@ -3,7 +3,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -273,7 +273,7 @@ default:
 			d := NewDecoder(f)
 
 			type pair struct {
-				Name  string
+				Key  string
 				Value interface{}
 			}
 
@@ -296,7 +296,7 @@ default:
 			d := NewDecoder(f)
 
 			type elem struct {
-				Name  string
+				Key  string
 				Value interface{}
 			}
 
@@ -634,8 +634,8 @@ not_parsed: ! 123
 				d := NewDecoder(strings.NewReader(`
 ---
 hr: &ss
-  - MG
-  - SS
+ - MG
+ - SS
 rbi: *ss
 `))
 				v := make(map[string][]string)
@@ -652,7 +652,7 @@ rbi: *ss
 				d := NewDecoder(strings.NewReader(`
 ---
 hr: &ss
-  MG : SS
+ MG : SS
 rbi: *ss
 `))
 				v := make(map[string]map[string]string)
@@ -674,7 +674,7 @@ rbi: *ss
 			d := NewDecoder(strings.NewReader(`
 ---
 a: &map
-  b : 1
+ b : 1
 c: *map
 `))
 			var s S
@@ -717,8 +717,8 @@ a: *missing
 				d := NewDecoder(strings.NewReader(`
 ---
 hr: &ss
-  - MG
-  - SS
+ - MG
+ - SS
 rbi: *ss
 `))
 				v := make(map[string]interface{})
@@ -735,7 +735,7 @@ rbi: *ss
 				d := NewDecoder(strings.NewReader(`
 ---
 hr: &ss
-  MG : SS
+ MG : SS
 rbi: *ss
 `))
 				v := make(map[string]interface{})
@@ -752,7 +752,7 @@ rbi: *ss
 				d := NewDecoder(strings.NewReader(`
 ---
 a: &a
-  b: 1
+ b: 1
 x: *a
 y: *a
 `))
@@ -805,7 +805,7 @@ a: *missing
 ---
 a: &a b
 x: &b
-  d: *a
+ d: *a
 z: *b
 `))
 			v := make(map[string]interface{})
@@ -824,7 +824,7 @@ z: *b
 ---
 a: &a b
 x: &c
-  d : &a 1
+ d : &a 1
 y: *a
 `))
 			v := make(map[string]interface{})
@@ -842,15 +842,15 @@ y: *a
 			d := NewDecoder(strings.NewReader(`
 ---
 a:
-  aa: &x
-    aaa: 1
-  ab:
-    aba: &y
-      abaa:
-        abaaa: *x
+ aa: &x
+   aaa: 1
+ ab:
+   aba: &y
+     abaa:
+       abaaa: *x
 b:
 - ba:
-    baa: *y
+   baa: *y
 `))
 			v := make(map[string]interface{})
 			err := d.Decode(&v)
@@ -972,9 +972,9 @@ b:
 			d := NewDecoder(strings.NewReader(`
 ---
 applications:
- - name: m
-   services:
-       - !@#
+- name: m
+  services:
+      - !@#
 `))
 			var v interface{}
 
