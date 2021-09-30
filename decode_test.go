@@ -125,8 +125,8 @@ var _ = Describe("Decode", func() {
 				err := d.Decode(&v)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(v).To(Equal([]batter{
-					batter{Name: "Mark McGwire", HR: 65, AVG: 0.278},
-					batter{Name: "Sammy Sosa", HR: 63, AVG: 0.288},
+					{Name: "Mark McGwire", HR: 65, AVG: 0.278},
+					{Name: "Sammy Sosa", HR: 63, AVG: 0.288},
 				}))
 
 			})
@@ -145,8 +145,8 @@ var _ = Describe("Decode", func() {
 				err := d.Decode(&v)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(v).To(Equal([]batter{
-					batter{N: "Mark McGwire", H: 65, A: 0.278},
-					batter{N: "Sammy Sosa", H: 63, A: 0.288},
+					{N: "Mark McGwire", H: 65, A: 0.278},
+					{N: "Sammy Sosa", H: 63, A: 0.288},
 				}))
 
 			})
@@ -203,8 +203,8 @@ default:
 					err := d.Decode(&v)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(v).To(Equal([]batter{
-						batter{N: "Mark McGwire", HR: 65},
-						batter{N: "Sammy Sosa", HR: 63},
+						{N: "Mark McGwire", HR: 65},
+						{N: "Sammy Sosa", HR: 63},
 					}))
 				})
 			})
@@ -265,7 +265,7 @@ default:
 
 			err := d.Decode(&v)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal(map[string][]string{"hr": []string{"Mark McGwire", "Sammy Sosa"}, "rbi": []string{"Sammy Sosa", "Ken Griffey"}}))
+			Expect(v).To(Equal(map[string][]string{"hr": {"Mark McGwire", "Sammy Sosa"}, "rbi": {"Sammy Sosa", "Ken Griffey"}}))
 		})
 
 		It("Decodes to a slice of structs", func() {
@@ -273,7 +273,7 @@ default:
 			d := NewDecoder(f)
 
 			type pair struct {
-				Key  string
+				Key   string
 				Value interface{}
 			}
 
@@ -283,11 +283,11 @@ default:
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(v).To(Equal([][]pair{
-				[]pair{
-					pair{"name", "Mark McGwire"},
-					pair{"stats", []pair{pair{"hr", int64(65)}, pair{"avg", float64(0.278)}}},
-					pair{"teams", []interface{}{[]pair{pair{"name", "Oakland"}}, []pair{pair{"name", "St Louis"}}}}},
-				[]pair{pair{"name", "Sammy Sosa"}, pair{"stats", []pair{pair{"hr", int64(63)}, pair{"avg", float64(0.288)}}}},
+				{
+					{"name", "Mark McGwire"},
+					{"stats", []pair{{"hr", int64(65)}, {"avg", float64(0.278)}}},
+					{"teams", []interface{}{[]pair{{"name", "Oakland"}}, []pair{{"name", "St Louis"}}}}},
+				{{"name", "Sammy Sosa"}, {"stats", []pair{{"hr", int64(63)}, {"avg", float64(0.288)}}}},
 			}))
 		})
 
@@ -296,7 +296,7 @@ default:
 			d := NewDecoder(f)
 
 			type elem struct {
-				Key  string
+				Key   string
 				Value interface{}
 			}
 
@@ -308,11 +308,11 @@ default:
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(v).To(Equal([]doc{
-				doc{
+				{
 					elem{"name", "Mark McGwire"},
 					elem{"stats", doc{elem{"hr", int64(65)}, elem{"avg", float64(0.278)}}},
 					elem{"teams", []interface{}{doc{elem{"name", "Oakland"}}, doc{elem{"name", "St Louis"}}}}},
-				doc{elem{"name", "Sammy Sosa"}, elem{"stats", doc{elem{"hr", int64(63)}, elem{"avg", float64(0.288)}}}},
+				{elem{"name", "Sammy Sosa"}, elem{"stats", doc{elem{"hr", int64(63)}, elem{"avg", float64(0.288)}}}},
 			}))
 		})
 	})
@@ -575,7 +575,7 @@ not_parsed: ! 123
 			err := d.Decode(&v)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(map[string][]byte{
-				"picture": []byte{0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x0c, 0x00,
+				"picture": {0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x0c, 0x00,
 					0x0c, 0x00, 0x84, 0x00, 0x00, 0xff, 0xff, 0xf7, 0xf5, 0xf5, 0xee,
 					0xe9, 0xe9, 0xe5, 0x66, 0x66, 0x66, 0x00, 0x00, 0x00, 0xe7, 0xe7,
 					0xe7, 0x5e, 0x5e, 0x5e, 0xf3, 0xf3, 0xed, 0x8e, 0x8e, 0x8e, 0xe0,
